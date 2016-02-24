@@ -5,9 +5,18 @@ import java.rmi.RemoteException;
 
 public class Client {
 
-	public static void main(String[] args) {
+	private String serverIP;
+	private String serverPort;
+	private String serverName;
+	public Client(String serverIP, String serverPort, String serverName) {
+		this.serverIP = serverIP;
+		this.serverPort = serverPort;
+		this.serverName = serverName;
+	}
+	public void initiateClient() {
 		try {
-			ServerIf servif = (ServerIf)Naming.lookup("rmi://localhost/NewsBulletinServer");
+			String lookupQuery ="rmi://" + serverIP + ":" + serverPort + "/" + serverName;
+			ServerIf servif = (ServerIf)Naming.lookup(lookupQuery);
 			System.out.println(servif.read());
 		} catch (MalformedURLException | RemoteException | NotBoundException e) {
 			e.printStackTrace();
