@@ -1,5 +1,3 @@
-
-
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -10,7 +8,7 @@ public class Client {
 	public static void main(String[] args) {
 		try {
 			ServerIf servif = (ServerIf)Naming.lookup("rmi://localhost/NewsBulletinServer");
-			servif.read();
+			System.out.println(servif.read());
 		} catch (MalformedURLException | RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
