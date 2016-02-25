@@ -1,0 +1,79 @@
+<project>
+    <property environment="env"/>
+    <property name="project.dir" value="."/>
+    <property name="lib.dir" value="lib"/>
+    <property name="src.dir" value="src"/>
+    <property name="classes.dir" value="build/classes"/>
+    <property name="build.dir" value="build"/>
+    <property name="jar.dir" value="build/jar"/>
+    <property name="serv.dir" value="${env.HOME}/BServer/"/>
+    <property name="client.dir" value="${env.HOME}/BClient/"/>
+    <property name="start.dir" value="${env.HOME}/BStart/"/>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac target="1.8" srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <mkdir dir="${client.dir}"/>
+        <copy todir="${client.dir}">
+                <fileset file="Client.jar" dir="${jar.dir}"/>
+                <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy> 
+        <jar destfile="${jar.dir}/Client.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="Client"/>
+            </manifest>
+        </jar>
+        <copy todir="${client.dir}">
+                <fileset file="Client.jar" dir="${jar.dir}"/>
+                <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy> 
+        <mkdir dir="${serv.dir}"/>
+        <jar destfile="${jar.dir}/Server.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="Server"/>
+            </manifest>
+        </jar>
+        <copy todir="${serv.dir}">
+            <fileset file="Server.jar" dir="${jar.dir}"/>
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+        <copy todir="${serv.dir}">
+                <fileset file="**/*.class" dir="${classes.dir}"/>
+        </copy> 
+        <mkdir dir="${start.dir}"/>
+        <jar destfile="${jar.dir}/Start.jar" basedir="${classes.dir}" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="Start"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/sshj-0.10.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/bcpkix-jdk15on-1.50.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/bcprov-jdk15on-1.50.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-api-1.7.7.jar"/>
+        </jar>
+        <copy todir="${start.dir}">
+            <fileset file="Start.jar" dir="${jar.dir}"/>
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <target name="run" depends="jar">
+        <copy todir="${project.dir}">
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+        <java jar="${jar.dir}/Start.jar" fork="true"/>
+    </target>
+
+</project>
