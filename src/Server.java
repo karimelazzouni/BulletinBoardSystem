@@ -12,18 +12,18 @@ public class Server {
 	
 	public static void main(String [] args) throws FileNotFoundException, AlreadyBoundException {
 		int port = Integer.parseInt(args[0]);
-		String name = args[1];
 		System.setProperty("java.rmi.server.hostname", "192.168.1.4");
-		String rmiHost = args[2];
-		int rmiPort = Integer.parseInt(args[3]);
+		String rmiHost = args[1];
+		int rmiPort = Integer.parseInt(args[2]);
 		try {
-			BulletinBoardImpl bb = new BulletinBoardImpl();
-			BulletinBoard stub = (BulletinBoard) UnicastRemoteObject.exportObject(bb, port);
-			System.out.println("before locate");
+			News news = new News();
+			BulletinBoardReaderImpl bbr = new BulletinBoardReaderImpl(news);
+			BulletinBoardWriterImpl bbw = new BulletinBoardWriterImpl(news);
+			BulletinBoardReader stubReader = (BulletinBoardReader) UnicastRemoteObject.exportObject(bbr, port);
+			BulletinBoardWriter stubWriter = (BulletinBoardWriter) UnicastRemoteObject.exportObject(bbw, port);
 			Registry reg = LocateRegistry.getRegistry(rmiHost,rmiPort);
-			System.out.println("after locate");
-			reg.rebind(name, stub);
-			System.out.println("after rebind");
+			reg.rebind("NewsBulletinBoardReader", stubReader);
+			reg.rebind("NewsBulletinBoardWriter", stubWriter);
 			PrintWriter readers = new PrintWriter(new FileOutputStream(
 				    new File("server.txt")));
 			readers.println("sSeq\t\toVal\t\trID\t\trNum");
