@@ -3,3 +3,4 @@
 /build/**/*
 /lib/
 /lib/*
+/src/system.properties
