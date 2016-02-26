@@ -13,6 +13,7 @@ import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
+import net.schmizz.sshj.connection.channel.direct.Signal;
 
 public class Start {
 
@@ -79,21 +80,6 @@ public class Start {
 		numAccesses = Integer.parseInt(prop.getProperty("RW.numberOfAccesses"));
 	}
 
-	// @SuppressWarnings("unused")
-	// private static void printConfig() {
-	// System.out.println("Server IP: " + serverIP);
-	// System.out.println("Server Port: " + serverPort);
-	// System.out.println("Readers (" + numReaders + "): ");
-	// for (int i = 0; i < readersIPs.length; i++) {
-	// System.out.println("\t" + readersIPs[i]);
-	// }
-	// System.out.println("Writers (" + numWriters + "): ");
-	// for (int i = 0; i < writersIPs.length; i++) {
-	// System.out.println("\t" + writersIPs[i]);
-	// }
-	// System.out.println("Number Of Accesses: " + numAccesses);
-	// }
-
 	@SuppressWarnings("unused")
 	private static String SSHExecuteReturn(Session s, String cmdLine) throws IOException {
 		Command cmd = s.exec(cmdLine);
@@ -113,23 +99,21 @@ public class Start {
 	}
 
 	private static void closeRMIRegProcess() throws IOException {
-		// TODO
 		Session rmiSession = serverSSH.startSession();
-		rmiSession.exec("fuser -k " + registryPort + "/tcp &");
+		rmiSession.exec("fuser " + registryPort + "/tcp | cut -d' ' -f 2 | xargs kill -2");
 		rmiSession.close();
 	}
 
 	private static void startServerProcess() throws IOException {
 		Session serverSession = serverSSH.startSession();
 		serverSession.exec("cd BServer && " + "java -jar Server.jar " + serverPort + " " + serverIP + " " + registryPort + " &");
-		System.out.println("after server");
 		serverSession.close();
 	}
 
 	private static void closeServerProcess() throws IOException {
 		// TODO
 		Session serverSession = serverSSH.startSession();
-		serverSession.exec("fuser -k " + serverPort + "/tcp &");
+		serverSession.exec("fuser " + serverPort + "/tcp | cut -d' ' -f 2 | xargs kill -2");
 		serverSession.close();
 	}
 
