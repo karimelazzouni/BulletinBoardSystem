@@ -28,16 +28,17 @@
         <mkdir dir="${client.dir}"/>
         <jar destfile="${jar.dir}/ReaderClient.jar" basedir="${classes.dir}">
             <manifest>
-                <attribute name="Main-Class" value="Client"/>
+                <attribute name="Main-Class" value="ReaderClient"/>
             </manifest>
         </jar>
         <jar destfile="${jar.dir}/WriterClient.jar" basedir="${classes.dir}">
             <manifest>
-                <attribute name="Main-Class" value="Client"/>
+                <attribute name="Main-Class" value="WriterClient"/>
             </manifest>
         </jar>
         <copy todir="${client.dir}">
-                <fileset file="Client.jar" dir="${jar.dir}"/>
+                <fileset file="ReaderClient.jar" dir="${jar.dir}"/>
+                <fileset file="WriterClient.jar" dir="${jar.dir}"/>
                 <fileset dir="${src.dir}" excludes="**/*.java"/>
         </copy> 
         <mkdir dir="${serv.dir}"/>

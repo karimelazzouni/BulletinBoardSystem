@@ -11,18 +11,24 @@ public class ReaderClient {
 	public static void main(String[] args) {
 		String serverIP = args[0];
 		String id = args[1];
+		int regPort = Integer.parseInt(args[2]);
 		
 		try {
-			PrintWriter out = new PrintWriter(new FileOutputStream(new File("log" + id), true));
-			Registry reg = LocateRegistry.getRegistry(serverIP);
+			File file = new File("log" + id);
+			PrintWriter out = null;
+			if(!file.exists()) {
+				out = new PrintWriter(new FileOutputStream(file));
+				out.printf("Client type: Reader\n");
+				out.printf("Client name: %s\n", id);
+				out.printf("%-10s %-10s %-10s\n", "rSeq", "sSeq", "oVal");
+				out.flush();
+			} else {
+				out = new PrintWriter(new FileOutputStream(file, true));
+			}
+
+			Registry reg = LocateRegistry.getRegistry(serverIP, regPort);
 			BulletinBoardReader stubReader = (BulletinBoardReader) reg.lookup("NewsBulletinBoardReader");
-			out.printf("Client type: Reader\n");
-			out.printf("Client name: %i\n" + id);
-			out.printf("%-10s %-10s %-10", "rSeq", "sSeq", "oVal");
-			
-			// read news
-			out.println(stubReader.read());
-			
+			out.println(stubReader.read(id));
 			out.close();
 		} catch (RemoteException re) {
 			System.err.println("Remote Exception has occurred. Program will terminate.");
@@ -31,7 +37,6 @@ public class ReaderClient {
 			System.err.println("Remote BulletinBoard object is not bound. Program will terminate.");
 			nbe.printStackTrace();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

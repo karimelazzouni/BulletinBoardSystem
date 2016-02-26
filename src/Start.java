@@ -15,15 +15,15 @@ import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 
 public class Start {
-	
-	
+
 	static class ClientData {
 		int type;
 		int id;
 		String ip;
 		String usr;
 		String pass;
-		public ClientData(int id, int type, String ip, String usr,String pass){
+
+		public ClientData(int id, int type, String ip, String usr, String pass) {
 			this.id = id;
 			this.type = type;
 			this.ip = ip;
@@ -37,16 +37,16 @@ public class Start {
 	private static int serverPort;
 	private static String serverUsername;
 	private static String serverPassword;
-	
+
 	private static int numReaders;
 	private static int numWriters;
 	private static ClientData[] clientsData;
-	
+
 	private static int numAccesses;
 	private static SSHClient serverSSH;
 	private static SSHClient[] clientsSSH;
 	private static Thread[] clientsEngines;
-	
+
 	private static void loadProp() throws IOException {
 		Properties prop = new Properties();
 		InputStream input = new FileInputStream("system.properties");
@@ -56,41 +56,43 @@ public class Start {
 		serverPort = Integer.parseInt(prop.getProperty("RW.server.port"));
 		serverUsername = prop.getProperty("RW.server.username");
 		serverPassword = prop.getProperty("RW.server.password");
-		
+
 		numReaders = Integer.parseInt(prop.getProperty("RW.numberOfReaders"));
 		numWriters = Integer.parseInt(prop.getProperty("RW.numberOfWriters"));
-		clientsData =  new ClientData[numReaders + numWriters];
-		
+		clientsData = new ClientData[numReaders + numWriters];
+
 		for (int i = 0; i < numReaders; i++) {
 			String prop_str = ("RW.reader" + i);
 			String username = prop_str.concat(".username");
 			String password = prop_str.concat(".password");
-			clientsData[i] = new ClientData(i, ClientEngine.READER, prop.getProperty(prop_str), prop.getProperty(username), prop.getProperty(password));
+			clientsData[i] = new ClientData(i, ClientEngine.READER, prop.getProperty(prop_str),
+					prop.getProperty(username), prop.getProperty(password));
 		}
-		
-		for (int i = numReaders; i < numWriters+numReaders; i++) {
-			String prop_str = ("RW.writer" + i);
+
+		for (int i = numReaders; i < numWriters + numReaders; i++) {
+			String prop_str = ("RW.writer" + (i-numReaders));
 			String username = prop_str.concat(".username");
 			String password = prop_str.concat(".password");
-			clientsData[i] = new ClientData(i, ClientEngine.WRITER, prop.getProperty(prop_str), prop.getProperty(username), prop.getProperty(password));
+			clientsData[i] = new ClientData(i, ClientEngine.WRITER, prop.getProperty(prop_str),
+					prop.getProperty(username), prop.getProperty(password));
 		}
 		numAccesses = Integer.parseInt(prop.getProperty("RW.numberOfAccesses"));
 	}
 
-//	@SuppressWarnings("unused")
-//	private static void printConfig() {
-//		System.out.println("Server IP: " + serverIP);
-//		System.out.println("Server Port: " + serverPort);
-//		System.out.println("Readers (" + numReaders + "): ");
-//		for (int i = 0; i < readersIPs.length; i++) {
-//			System.out.println("\t" + readersIPs[i]);
-//		}
-//		System.out.println("Writers (" + numWriters + "): ");
-//		for (int i = 0; i < writersIPs.length; i++) {
-//			System.out.println("\t" + writersIPs[i]);
-//		}
-//		System.out.println("Number Of Accesses: " + numAccesses);
-//	}
+	// @SuppressWarnings("unused")
+	// private static void printConfig() {
+	// System.out.println("Server IP: " + serverIP);
+	// System.out.println("Server Port: " + serverPort);
+	// System.out.println("Readers (" + numReaders + "): ");
+	// for (int i = 0; i < readersIPs.length; i++) {
+	// System.out.println("\t" + readersIPs[i]);
+	// }
+	// System.out.println("Writers (" + numWriters + "): ");
+	// for (int i = 0; i < writersIPs.length; i++) {
+	// System.out.println("\t" + writersIPs[i]);
+	// }
+	// System.out.println("Number Of Accesses: " + numAccesses);
+	// }
 
 	@SuppressWarnings("unused")
 	private static String SSHExecuteReturn(Session s, String cmdLine) throws IOException {
@@ -113,14 +115,13 @@ public class Start {
 	private static void closeRMIRegProcess() throws IOException {
 		// TODO
 		Session rmiSession = serverSSH.startSession();
-		rmiSession.exec("fuser -k " + registryPort + "/tcp");
+		rmiSession.exec("fuser -k " + registryPort + "/tcp &");
 		rmiSession.close();
 	}
 
 	private static void startServerProcess() throws IOException {
 		Session serverSession = serverSSH.startSession();
-		serverSession.exec("cd && " + "java -jar Server.jar " + serverPort + " " + serverIP + " "
-				+ serverPort + " &");
+		serverSession.exec("cd BServer && " + "java -jar Server.jar " + serverPort + " " + serverIP + " " + registryPort + " &");
 		System.out.println("after server");
 		serverSession.close();
 	}
@@ -128,7 +129,7 @@ public class Start {
 	private static void closeServerProcess() throws IOException {
 		// TODO
 		Session serverSession = serverSSH.startSession();
-		serverSession.exec("fuser -k " + serverPort + "/tcp");
+		serverSession.exec("fuser -k " + serverPort + "/tcp &");
 		serverSession.close();
 	}
 
@@ -146,8 +147,8 @@ public class Start {
 		cleanLogs();
 		clientsEngines = new Thread[clientsSSH.length];
 		for (int i = 0; i < clientsSSH.length; i++) {
-			ClientEngine engine = new ClientEngine(clientsData[i].id, 
-					clientsData[i].type,numAccesses, clientsSSH[i], serverIP);
+			ClientEngine engine = new ClientEngine(clientsData[i].id, clientsData[i].type, numAccesses, clientsSSH[i],
+					serverIP, registryPort);
 			clientsEngines[i] = new Thread(engine);
 			clientsEngines[i].start();
 		}
@@ -164,11 +165,11 @@ public class Start {
 	}
 
 	private static void joinClients() throws InterruptedException {
-		for(int i = 0; i < clientsEngines.length; i++){
+		for (int i = 0; i < clientsEngines.length; i++) {
 			clientsEngines[i].join();
 		}
 	}
-	
+
 	private static void cleanLogs() throws ConnectionException, TransportException {
 		for (int i = 0; i < clientsSSH.length; i++) {
 			Session rmSession = clientsSSH[i].startSession();
@@ -189,7 +190,7 @@ public class Start {
 			startClients();
 
 			joinClients();
-			
+
 			closeRMIRegProcess();
 			closeServerProcess();
 			serverSSH.disconnect();

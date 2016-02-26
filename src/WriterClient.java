@@ -12,18 +12,25 @@ public class WriterClient {
 	public static void main(String[] args) {
 		String serverIP = args[0];
 		String id = args[1];
-
+		int regPort = Integer.parseInt(args[2]);
 		try {
-			PrintWriter out = new PrintWriter(new FileOutputStream(new File("log" + id), true));
-			Registry reg = LocateRegistry.getRegistry(serverIP);
+			File file = new File("log" + id);
+			PrintWriter out = null;
+			if(!file.exists()) {
+				out = new PrintWriter(new FileOutputStream(file));
+				out.printf("Client type: Writer\n");
+				out.printf("Client name: %s\n", id);
+				out.printf("%-10s %-10s\n", "rSeq", "sSeq");
+				out.flush();
+			} else {
+				out = new PrintWriter(new FileOutputStream(file, true));
+			}
+
+			Registry reg = LocateRegistry.getRegistry(serverIP, regPort);
 			BulletinBoardWriter stubWriter = (BulletinBoardWriter) reg.lookup("NewsBulletinBoardWriter");
-			out.printf("Client type: Writer\n");
-			out.printf("Client name: %i\n" + id);
-			out.printf("%-10s %-10s", "rSeq", "sSeq");
 			
 			// write News
-			out.println(stubWriter.write(id));
-			
+			out.println(stubWriter.write(id, id));
 			out.close();
 		} catch (RemoteException re) {
 			System.err.println("Remote Exception has occurred. Program will terminate.");
