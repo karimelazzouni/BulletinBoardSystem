@@ -1,0 +1,112 @@
+<project>
+    <property environment="env"/>
+    <property name="project.dir" value="."/>
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="readerClasses.dir" value="${classes.dir}/readerClasses"/>
+    <property name="writerClasses.dir" value="${classes.dir}/writerClasses"/>
+    <property name="serverClasses.dir" value="${classes.dir}/serverClasses"/>
+    <property name="startClasses.dir" value="${classes.dir}/startClasses"/>
+    <property name="jar.dir" value="${build.dir}/jar"/>
+    <property name="serv.dir" value="${env.HOME}/BServer/"/>
+    <property name="client.dir" value="${env.HOME}/BClient/"/>
+    <property name="start.dir" value="${env.HOME}/BStart/"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${serv.dir}"/>
+        <delete dir="${client.dir}"/>
+        <delete dir="${start.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac target="1.8" srcdir="${src.dir}" destdir="${classes.dir}"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <mkdir dir="${readerClasses.dir}"/>
+        <mkdir dir="${writerClasses.dir}"/>
+        <mkdir dir="${serverClasses.dir}"/>
+        <mkdir dir="${startClasses.dir}"/>
+        <mkdir dir="${client.dir}"/>
+        <mkdir dir="${serv.dir}"/>
+        <mkdir dir="${start.dir}"/>
+       
+        <copy todir="${readerClasses.dir}">
+            <fileset file="ReaderClient.class" dir="${classes.dir}"/>
+            <fileset file="BulletinBoardReader.class" dir="${classes.dir}"/>
+        </copy>
+        
+        <copy todir="${writerClasses.dir}">
+            <fileset file="WriterClient.class" dir="${classes.dir}"/>
+            <fileset file="BulletinBoardWriter.class" dir="${classes.dir}"/>
+        </copy>
+        
+        <copy todir="${serverClasses.dir}">
+            <fileset file="BulletinBoardReader.class" dir="${classes.dir}"/>
+            <fileset file="BulletinBoardWriter.class" dir="${classes.dir}"/>
+            <fileset file="BulletinBoardReaderImpl.class" dir="${classes.dir}"/>
+            <fileset file="BulletinBoardWriterImpl.class" dir="${classes.dir}"/>
+            <fileset file="News.class" dir="${classes.dir}"/>
+            <fileset file="NewsStats.class" dir="${classes.dir}"/>
+            <fileset file="Server.class" dir="${classes.dir}"/>
+        </copy>
+        
+        <copy todir="${startClasses.dir}">
+            <fileset file="Start.class" dir="${classes.dir}"/>
+            <fileset file="ClientData.class" dir="${classes.dir}"/>
+            <fileset file="ClientDriver.class" dir="${classes.dir}"/>
+        </copy>
+
+        <jar destfile="${jar.dir}/ReaderClient.jar" basedir="${readerClasses.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="ReaderClient"/>
+            </manifest>
+        </jar>
+        
+        <jar destfile="${jar.dir}/WriterClient.jar" basedir="${writerClasses.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="WriterClient"/>
+            </manifest>
+        </jar>
+        
+        <copy todir="${client.dir}">
+                <fileset file="ReaderClient.jar" dir="${jar.dir}"/>
+                <fileset file="WriterClient.jar" dir="${jar.dir}"/>
+        </copy> 
+        
+        <jar destfile="${jar.dir}/Server.jar" basedir="${serverClasses.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="Server"/>
+            </manifest>
+        </jar>
+
+        <copy todir="${serv.dir}">
+                <fileset file="Server.jar" dir="${jar.dir}"/>
+        </copy>
+
+        <copy todir="${serv.dir}">
+                <fileset file="BulletinBoardReader.class" dir="${classes.dir}"/>
+                <fileset file="BulletinBoardWriter.class" dir="${classes.dir}"/>
+        </copy> 
+        
+        <jar destfile="${jar.dir}/Start.jar" basedir="${startClasses.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="Start"/>
+            </manifest>
+        </jar>
+        
+        <copy todir="${start.dir}">
+            <fileset file="Start.jar" dir="${jar.dir}"/>
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <target name="run" depends="jar">
+        <java jar="${start.dir}/Start.jar" dir="${start.dir}" fork="true"/>
+    </target>
+
+</project>
